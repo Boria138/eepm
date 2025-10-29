@@ -13,17 +13,24 @@ mkdir -p opt/svp4
 erc $TAR
 
 mkdir installer
-LANG=C grep --only-matching --byte-offset --binary --text $'7z\xBC\xAF\x27\x1C' "svp4-linux-64.run" |
+
+echo "Finding 7z archives in installer..."
+LANG=C grep --only-matching --byte-offset --binary --text $'7z\xBC\xAF\x27\x1C' "svp4-linux.run" |
 	cut -f1 -d: |
 	while read ofs; do
-		dd if="svp4-linux-64.run" bs=1M iflag=skip_bytes status=none skip="${ofs}" of="installer/bin-${ofs}.7z"
+		dd if="svp4-linux.run" bs=1M iflag=skip_bytes status=none skip="${ofs}" of="installer/bin-${ofs}.7z"
 	done
+
+echo "Extracting 7z archives from installer..."
 for f in "installer/"*.7z; do
-		7z -bd -bb0 -y x -o"extracted/" "${f}" || true
+	7z -bd -bb0 -y x -o"extracted/" "${f}" || true
 done
 
 # Drop bundled pythonqt for avoid dependency on python 3.8
 rm extracted/extensions/libPythonQt.so
+
+# Drop svtube for avoid dependency on python 3.8
+rm extracted/extensions/libsvptube.so
 
 mv extracted/* opt/svp4/
 
